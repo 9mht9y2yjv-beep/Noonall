@@ -1,1 +1,47 @@
+name: Noon 90 Watcher
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run one scan cycle
+        env:
+          SINGLE_CYCLE: "true"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          X_VISITOR_ID: ${{ secrets.X_VISITOR_ID }}
+          X_LAT: ${{ secrets.X_LAT }}
+          X_LNG: ${{ secrets.X_LNG }}
+          X_ECOM_ZONECODE: ${{ secrets.X_ECOM_ZONECODE }}
+          X_ROCKET_ZONECODE: ${{ secrets.X_ROCKET_ZONECODE }}
+          NOON_COOKIES: ${{ secrets.NOON_COOKIES }}
+          KEYWORDS: ${{ secrets.KEYWORDS }}
+          OFFICIAL_DISCOUNT_THRESHOLD: ${{ secrets.OFFICIAL_DISCOUNT_THRESHOLD }}
+          BASELINE_COLLAPSE_THRESHOLD: ${{ secrets.BASELINE_COLLAPSE_THRESHOLD }}
+        run: python watcher_noon_90.py
+
+      - name: Save state (only if changed)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update noon-90 state"
+          file_pattern: "seen_noon_90.json price_history_noon_90.json"
 
